@@ -31,6 +31,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dm#i9l*8(ly__3)honxq%c(zit
 DEBUG = (os.getenv('DEBUG', 'true').strip().lower() in ['1','true','yes','on'])
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+ALLOWED_HOSTS.append('.onrender.com')  # Allow all Render subdomains
+
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:3000').split(',') if o.strip()]
+CSRF_TRUSTED_ORIGINS.append('https://*.onrender.com')
 
 
 # Application definition
