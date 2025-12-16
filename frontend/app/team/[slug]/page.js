@@ -16,7 +16,7 @@ async function fetchTeams() {
 
 async function fetchConfig() {
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/site-config', { cache: 'no-store' });
+    const res = await fetch(apiUrl('/api/site-config'), { cache: 'no-store' });
     if (!res.ok) return {};
     return res.json();
   } catch {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Reveal from "../components/Reveal";
+import { apiUrl } from "@/app/lib/api";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({

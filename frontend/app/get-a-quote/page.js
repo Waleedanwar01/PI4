@@ -11,10 +11,11 @@ async function fetchConfig() {
 export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
+import { apiUrl } from "@/app/lib/api";
 
 async function fetchQuote() {
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/resources/quote", { cache: 'no-store' });
+    const res = await fetch(apiUrl("/api/resources/quote"), { cache: 'no-store' });
     if (!res.ok) throw new Error('bad');
     return res.json();
   } catch {

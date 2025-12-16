@@ -95,7 +95,7 @@ async function fetchSolution(slug) {
 
 async function fetchSiteConfig() {
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/site-config", { cache: 'no-store' });
+    const res = await fetch(apiUrl("/api/site-config"), { cache: 'no-store' });
     if (!res.ok) throw new Error('bad');
     return await res.json();
   } catch {

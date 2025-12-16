@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Reveal from '../../components/Reveal';
+import { apiUrl } from "@/app/lib/api";
 
 function embedUrl(u) {
   try {
@@ -31,7 +32,7 @@ export default function Page() {
   useEffect(() => {
     (async () => {
       try {
-        const r1 = await fetch('http://localhost:8000/api/portal/page', { cache: 'no-store' });
+        const r1 = await fetch(apiUrl('/api/portal/page'), { cache: 'no-store' });
         if (r1.ok) {
           const d = await r1.json();
           setPortal({
@@ -70,7 +71,7 @@ export default function Page() {
     e.preventDefault();
     if (!email || !password) return;
     try {
-      const res = await fetch('http://localhost:8000/api/auth/signup', {
+      const res = await fetch(apiUrl('/api/auth/signup'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, phone, policyNumber: policy }),

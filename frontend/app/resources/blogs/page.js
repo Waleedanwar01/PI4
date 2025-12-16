@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import Reveal from "../../components/Reveal";
 import { HiCalendar, HiUser } from "react-icons/hi";
+import { apiUrl } from "@/app/lib/api";
 
 async function fetchConfig() {
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/site-config", { cache: "no-store" });
+    const res = await fetch(apiUrl("/api/site-config"), { cache: "no-store" });
     if (!res.ok) return {};
     return res.json();
   } catch {
@@ -18,7 +19,7 @@ const PAGE_SIZE = 9;
 
 async function fetchBlogs(page, category) {
   try {
-    const url = new URL(`http://127.0.0.1:8000/api/resources/blogs`);
+    const url = new URL(apiUrl("/api/resources/blogs"));
     url.searchParams.set('page', page);
     url.searchParams.set('page_size', PAGE_SIZE);
     if (category) url.searchParams.set('category', category);
