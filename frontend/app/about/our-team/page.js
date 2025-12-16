@@ -1,9 +1,14 @@
 import { apiUrl } from "../../lib/api";
 
 async function fetchTeams() {
-  const res = await fetch(apiUrl("/api/teams/groups"), { next: { revalidate: 10 } });
-  if (!res.ok) return { groups: [] };
-  return res.json();
+  try {
+    const res = await fetch(apiUrl("/api/teams/groups"), { next: { revalidate: 10 } });
+    if (!res.ok) return { groups: [] };
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    return { groups: [] };
+  }
 }
 
 import Reveal from "../../components/Reveal";

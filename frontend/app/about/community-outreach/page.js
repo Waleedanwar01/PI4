@@ -1,9 +1,14 @@
 import { apiUrl } from "../../lib/api";
 
 async function fetchCommunity() {
-  const res = await fetch(apiUrl("/api/community/page"), { next: { revalidate: 10 } });
-  if (!res.ok) return { title: "Community Outreach", hero_image: "", hero_subtitle: "", sections: [] };
-  return res.json();
+  try {
+    const res = await fetch(apiUrl("/api/community/page"), { next: { revalidate: 10 } });
+    if (!res.ok) return { title: "Community Outreach", hero_image: "", hero_subtitle: "", sections: [] };
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching community:", error);
+    return { title: "Community Outreach", hero_image: "", hero_subtitle: "", sections: [] };
+  }
 }
 
 async function fetchConfig() {
