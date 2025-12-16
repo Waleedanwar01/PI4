@@ -3,6 +3,6 @@ services:
     name: pi4-backend
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     startCommand: gunicorn backend_app.wsgi:application
     autoDeploy: true

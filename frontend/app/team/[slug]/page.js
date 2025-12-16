@@ -1,5 +1,9 @@
 export const dynamic = 'force-dynamic';
 
+import Link from "next/link";
+import Image from "next/image";
+import { apiUrl } from "@/app/lib/api";
+
 function toSlug(name = '') {
   return String(name).toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
 }
@@ -16,7 +20,7 @@ async function fetchTeams() {
 
 async function fetchConfig() {
   try {
-    const res = await fetch(apiUrl('/api/site-config'), { cache: 'no-store' });
+    const res = await fetch('http://127.0.0.1:8000/api/site-config', { cache: 'no-store' });
     if (!res.ok) return {};
     return res.json();
   } catch {
