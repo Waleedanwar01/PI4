@@ -1,0 +1,11 @@
+export const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000';
+
+export function apiUrl(path = '') {
+  const p = String(path || '');
+  return API_BASE + (p.startsWith('/') ? p : ('/' + p));
+}
+
+export async function apiFetch(path, init) {
+  const url = apiUrl(path);
+  return fetch(url, init);
+}

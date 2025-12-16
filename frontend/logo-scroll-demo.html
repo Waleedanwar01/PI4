@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logo Scroll Animation Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* About Section */
+        .about {
+            height: 100vh;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .about-content {
+            max-width: 1200px;
+            text-align: center;
+        }
+
+        .about h2 {
+            font-size: 3rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        .about p {
+            font-size: 1.25rem;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            background: #1f2937;
+            color: white;
+            min-height: 300vh;
+            position: relative;
+            overflow-x: hidden;
+            padding: 6rem 0 3rem;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .logo-header {
+            text-align: center;
+            padding: 0 1rem 4rem;
+        }
+
+        .logo-header p {
+            font-size: 0.875rem;
+            font-weight: 300;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .logo-header h2 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .logo-scroll-container {
+            position: relative;
+            width: 100vw;
+            overflow-x: hidden;
+        }
+
+        .logo-track {
+            display: flex;
+            flex-wrap: nowrap;
+            width: fit-content;
+            padding: 2rem 4rem;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 5rem;
+        }
+
+        .logo-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 12rem;
+            text-align: center;
+        }
+
+        .logo-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            height: 6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-placeholder {
+            width: 180px;
+            height: 80px;
+            background: #e5e7eb;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .logo-name {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #d1d5db;
+            font-weight: 500;
+        }
+
+        /* Background decorations */
+        .bg-dots {
+            position: absolute;
+            top: 25%;
+            left: 2rem;
+            height: 3rem;
+            width: 3rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.25rem;
+            z-index: 0;
+        }
+
+        .bg-dot {
+            height: 0.5rem;
+            width: 0.5rem;
+            background: #3b82f6;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .bg-circle {
+            position: absolute;
+            top: 25%;
+            right: 25%;
+            height: 6rem;
+            width: 6rem;
+            border: 2px solid #4b5563;
+            border-radius: 50%;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero p { font-size: 1.25rem; }
+            .about h2 { font-size: 2rem; }
+            .logo-header h2 { font-size: 2.5rem; }
+            .logo-track { gap: 3rem; padding: 1rem 2rem; }
+            .logo-item { width: 8rem; }
+            .logo-placeholder { width: 120px; height: 60px; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div>
+            <h1>Insurance Made Simple</h1>
+            <p>Protecting what matters most to you</p>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about">
+        <div class="about-content">
+            <h2>About Gaspar Insurance</h2>
+            <p>Since 2020, we have been dedicated to helping our clients succeed with cost-effective coverage, risk management advice and smart employee benefits solutions. Your protection is our first priority.</p>
+        </div>
+    </section>
+
+    <!-- Logo Scrolling Section -->
+    <section class="logo-section">
+        <!-- Background decorations -->
+        <div class="bg-dots">
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+            <div class="bg-dot"></div>
+        </div>
+        <div class="bg-circle"></div>
+
+        <!-- Main content -->
+        <div class="logo-container">
+            <div class="logo-header">
+                <p>— Who we work with —</p>
+                <h2>Over <strong>246 A-rated</strong><br>insurance carriers</h2>
+            </div>
+
+            <div class="logo-scroll-container">
+                <div class="logo-track">
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Allied Insurance</div>
+                        </div>
+                        <div class="logo-name">Allied Insurance</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Progressive</div>
+                        </div>
+                        <div class="logo-name">Progressive</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">State Farm</div>
+                        </div>
+                        <div class="logo-name">State Farm</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">GEICO</div>
+                        </div>
+                        <div class="logo-name">GEICO</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Allstate</div>
+                        </div>
+                        <div class="logo-name">Allstate</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Nationwide</div>
+                        </div>
+                        <div class="logo-name">Nationwide</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Liberty Mutual</div>
+                        </div>
+                        <div class="logo-name">Liberty Mutual</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">The Hartford</div>
+                        </div>
+                        <div class="logo-name">The Hartford</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Travelers</div>
+                        </div>
+                        <div class="logo-name">Travelers</div>
+                    </div>
+                    <div class="logo-item">
+                        <div class="logo-box">
+                            <div class="logo-placeholder">Berkshire Hathaway</div>
+                        </div>
+                        <div class="logo-name">Berkshire Hathaway</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Register ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Logo scroll animation
+        function initLogoScroll() {
+            const logoSection = document.querySelector('.logo-section');
+            const logoTrack = document.querySelector('.logo-track');
+            
+            if (!logoSection || !logoTrack) return;
+
+            // Calculate scroll distance
+            const scrollDistance = logoTrack.scrollWidth - window.innerWidth;
+
+            // Only animate if there's content to scroll
+            if (scrollDistance <= 0) return;
+
+            // Create GSAP timeline with ScrollTrigger
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: logoSection,
+                    start: 'top top',
+                    end: '+=200%',
+                    scrub: 1,
+                    pin: true,
+                }
+            });
+
+            // Animate logo track horizontally
+            tl.to(logoTrack, {
+                x: -scrollDistance,
+                ease: 'none'
+            });
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure all styles are loaded
+            setTimeout(initLogoScroll, 100);
+        });
+
+        // Also reinitialize on window resize
+        window.addEventListener('resize', function() {
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            setTimeout(initLogoScroll, 100);
+        });
+    </script>
+</body>
+</html>

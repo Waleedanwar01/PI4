@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Libre Franklin", sans-serif;
+  font-optical-sizing: auto;
+  line-height: 1.5;
+  color: #333;
+}
+
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Ensure CKEditor/HTML content images are responsive and not stretched */
+.prose img,
+.prose figure img {
+  max-width: 100% !important;
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+:root {
+  --btn-bg: #1f2937;
+  --btn-hover-bg: #2563eb;
+  --btn-text: #ffffff;
+  --btn-radius: 0px;
+}
+
+button,
+a[class*="inline-flex"][class*="items-center"][class*="justify-center"] {
+  border-radius: var(--btn-radius) !important;
+}
+
+button {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+button:hover,
+a[class*="inline-flex"][class*="items-center"][class*="justify-center"]:hover {
+  background-color: var(--btn-hover-bg) !important;
+  color: var(--btn-text) !important;
+  border-color: transparent !important;
+}
