@@ -46,7 +46,7 @@ export default function Page() {
         }
       } catch {}
       try {
-        const r2 = await fetch('http://localhost:8000/api/site-config', { cache: 'no-store' });
+        const r2 = await fetch(apiUrl('/api/site-config'), { cache: 'no-store' });
         if (r2.ok) {
           const c = await r2.json();
           setCfgLogo(c.logo_url || '');
@@ -55,7 +55,7 @@ export default function Page() {
     })();
     (async () => {
       try {
-        const r = await fetch('http://localhost:8000/api/auth/me', { credentials: 'include' });
+        const r = await fetch(apiUrl('/api/auth/me'), { credentials: 'include' });
         if (r.ok) {
           const d = await r.json();
           if (d && d.ok) setUser({ email: d.email });

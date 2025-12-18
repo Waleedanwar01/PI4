@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { FiPhone, FiMail, FiUser, FiEdit } from 'react-icons/fi';
+import { apiUrl } from '@/app/lib/api';
 
 export default function Page() {
   const [cfg, setCfg] = useState({ phone: '', email: '' });
@@ -30,7 +31,7 @@ export default function Page() {
     setSending(true);
     setSent(false);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/contact', {
+      const res = await fetch(apiUrl('/api/contact'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, phone, message }),

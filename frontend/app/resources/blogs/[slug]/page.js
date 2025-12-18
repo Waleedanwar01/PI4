@@ -219,7 +219,7 @@ export default async function Page({ params }) {
 export async function generateMetadata({ params }) {
   const slug = params.slug;
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/resources/blogs/${slug}`, { cache: 'no-store' });
+    const res = await fetch(apiUrl(`/api/resources/blogs/${slug}`), { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       return {

@@ -25,7 +25,7 @@ export default function SignupPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("http://localhost:8000/api/home/partners", { cache: "no-store" });
+        const r = await fetch(apiUrl("/api/home/partners"), { cache: "no-store" });
         if (r.ok) {
           const d = await r.json();
           setPartners(d.items || []);

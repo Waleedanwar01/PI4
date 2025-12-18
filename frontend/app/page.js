@@ -402,7 +402,7 @@ function TeamSection() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/teams/groups", { cache: "no-store" });
+        const res = await fetch(apiUrl("/api/teams/groups"), { cache: "no-store" });
         const data = await res.json();
         const groups = data.groups || [];
         const flat = groups.flatMap((g) => (g.members || []).map((m) => ({
@@ -477,7 +477,7 @@ function ArticlesSection() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/resources/blogs?page=1&page_size=3", { cache: "no-store" });
+        const res = await fetch(apiUrl("/api/resources/blogs?page=1&page_size=3"), { cache: "no-store" });
         const data = await res.json();
         const items = (data.items || []).map((b) => ({
           title: b.title,
@@ -556,7 +556,7 @@ function ContactSection() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/site-config", { cache: "no-store" });
+        const res = await fetch(apiUrl("/api/site-config"), { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           setCfg({ phone: data.phone || "", email: data.email || "" });
@@ -571,7 +571,7 @@ function ContactSection() {
     setSending(true);
     setSent(false);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/contact", {
+      const res = await fetch(apiUrl("/api/contact"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, phone, message }),

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import Reveal from "../../components/Reveal";
 import { ServiceDropdown, IndustryDropdown, ConsultantDropdown } from "../../components/SolutionDropdowns";
+import { apiUrl } from "../../lib/api";
 
 function pointsFromHtml(html) {
   try {
@@ -70,7 +71,7 @@ function embedUrl(u) {
 
 async function fetchSolution(slug) {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/resources/solutions/page/${slug}`, { cache: 'no-store' });
+    const res = await fetch(apiUrl(`/api/resources/solutions/page/${slug}`), { cache: 'no-store' });
     if (!res.ok) throw new Error('bad');
     return await res.json();
   } catch {
