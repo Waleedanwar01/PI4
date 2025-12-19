@@ -58,8 +58,8 @@ function AboutPreviewSection() {
     .split(/<\/p>/i)
     .map((s) => s.trim())
     .filter(Boolean)[0] || '';
-  const phoneDisplay = config.phone || '1-818-302-3060';
-  const phoneHref = `tel:${(config.phone || '+18183023060').replace(/[^+\d]/g, '')}`;
+  const phoneDisplay = (config && config.phone) ? config.phone : '1-818-302-3060';
+  const phoneHref = `tel:${((config && config.phone) ? config.phone : '+18183023060').replace(/[^+\d]/g, '')}`;
 
   return (
     <section className="w-full bg-white py-16 px-4 sm:px-6 lg:px-8">

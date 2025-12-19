@@ -6,6 +6,7 @@ import Reveal from "../components/Reveal";
 import { apiUrl } from "../lib/api";
 import Link from "next/link";
 import PortalLogin from "../components/PortalLogin";
+import Loader from "../components/Loader";
 import { useEffect, useState } from "react";
 
 function embedUrl(u) {
