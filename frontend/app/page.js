@@ -16,6 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 import Hero from './components/Hero';
 import { apiUrl } from './lib/api';
+import Loader from './components/Loader';
 const logos = [
   { name: 'Allied Insurance 1', src: '/images/logos/allied-insurance.jpg' },
   { name: 'Allied Insurance 2', src: '/images/logos/allied-insurance.jpg' },
@@ -94,6 +95,7 @@ function CarrierLogosSection({ onScrollComplete }) {
   const trackRef = useRef(null);
   const scrollViewportRef = useRef(null);
   const [logos, setLogos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -105,11 +107,14 @@ function CarrierLogosSection({ onScrollComplete }) {
           const unique = Array.from(new Map(raw.map((x) => [x.src, x])).values());
           setLogos(unique);
         }
-      } catch {}
+      } catch {} finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   useEffect(() => {
+    if (loading) return;
     const section = scrollRef.current;
     const track = trackRef.current;
     const scrollViewport = scrollViewportRef.current;
@@ -187,7 +192,9 @@ function CarrierLogosSection({ onScrollComplete }) {
     return () => {
         ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, [logos]);
+  }, [logos, loading]);
+
+  if (loading) return <Loader className="min-h-screen bg-slate-900" />;
 
   return (
     // Franchise-style gradient background

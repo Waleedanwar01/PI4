@@ -4,9 +4,18 @@ from django.utils.datastructures import MultiValueDictKeyError
 from .models import CommunityPage, Nomination
 
 
+from django.conf import settings
+
+
 def _abs(request, f):
     try:
-        return request.build_absolute_uri(f.url)
+        url = f.url
+        if not url:
+            return ""
+        absolute_url = request.build_absolute_uri(url)
+        if not settings.DEBUG and absolute_url.startswith("http://"):
+            absolute_url = absolute_url.replace("http://", "https://", 1)
+        return absolute_url
     except Exception:
         return ""
 

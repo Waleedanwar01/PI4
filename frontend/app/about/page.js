@@ -5,12 +5,16 @@ import { apiUrl } from "../lib/api";
 import Reveal from "../components/Reveal";
 import Link from "next/link";
 import Image from "next/image";
+import Loader from "../components/Loader";
+
+export const revalidate = 60;
 
 export default function Page() {
   const [data, setData] = useState({ title: "About Us", hero_subtitle: "", hero_image: "", body_html: "", images: [] });
   const [stats, setStats] = useState([]);
   const [teams, setTeams] = useState([]);
   const [config, setConfig] = useState({ phone: '', email: '' });
+  const [loading, setLoading] = useState(true);
   const statsRef = useRef(null);
   const [startCount, setStartCount] = useState(false);
 
@@ -39,7 +43,9 @@ export default function Page() {
           setTeams(flat);
         }
         if (cfgRes.ok) setConfig(await cfgRes.json());
-      } catch {}
+      } catch {} finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -55,6 +61,8 @@ export default function Page() {
     io.observe(el);
     return () => io.disconnect();
   }, [stats.length]);
+
+  if (loading) return <Loader className="min-h-screen" />;
 
   const heroSrc = data.hero_image || "/images/about-home-page.png";
   const phoneDisplay = config.phone || "1-818-302-3060";
