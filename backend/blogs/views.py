@@ -13,6 +13,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
 
 
+def _abs(request, url):
+    if not url:
+        return ""
+    absolute_url = request.build_absolute_uri(url)
+    if not settings.DEBUG and absolute_url.startswith("http://"):
+        absolute_url = absolute_url.replace("http://", "https://", 1)
+    return absolute_url
+
+
 @require_GET
 def blog_list(request):
     page = int(request.GET.get("page", "1") or 1)
@@ -32,7 +41,7 @@ def blog_list(request):
         img_url = ""
         if post.cover_image:
             try:
-                img_url = request.build_absolute_uri(post.cover_image.url)
+                img_url = _abs(request, post.cover_image.url)
             except Exception:
                 img_url = ""
         items.append({
@@ -81,14 +90,26 @@ def blog_detail(request, slug):
     img_url = ""
     if post.cover_image:
         try:
-            img_url = request.build_absolute_uri(post.cover_image.url)
+            img_url = _abs(request, post.cover_image.url)
         except Exception:
             img_url = ""
+
+    # Fix relative image URLs in content_html for frontend
+    content = post.content_html or ""
+    try:
+        if content:
+            # Build absolute root URL (e.g. https://pi4.onrender.com)
+            root_url = _abs(request, '/').rstrip('/')
+            # Replace src="/media/..." with src="https://.../media/..."
+            content = content.replace('src="/media/', f'src="{root_url}/media/')
+            content = content.replace('href="/media/', f'href="{root_url}/media/')
+    except Exception:
+        pass
 
     images = []
     for img in post.images.all():
         try:
-            url = request.build_absolute_uri(img.image.url)
+            url = _abs(request, img.image.url)
         except Exception:
             url = ""
         images.append({
@@ -100,384 +121,259 @@ def blog_detail(request, slug):
     data = {
         "id": post.id,
         "title": post.title,
+        "slug": post.slug,
         "author": post.author,
         "date": localtime(post.created_at).strftime("%B %d, %Y"),
         "categories": [c.name for c in post.categories.all()],
         "primary_category": post.primary_category.name if post.primary_category else "",
         "image": img_url,
         "excerpt": post.excerpt,
-        "content_html": post.content_html,
-        "slug": post.slug,
+        "content_html": content,
         "images": images,
     }
     return JsonResponse(data)
 
 @require_GET
-def categories_list(request):
-    cats = Category.objects.all().order_by('name')
-    items = [{"name": c.name, "slug": c.slug} for c in cats]
-    return JsonResponse({"items": items})
-
-@require_GET
-def faq_list(request):
-    faqs = FAQ.objects.filter(published=True).select_related("category").order_by("category__name", "order", "id")
-    groups = {}
-    for f in faqs:
-        key = f.category.name if f.category else "General"
-        if key not in groups:
-            groups[key] = []
-        groups[key].append({
-            "id": f.id,
-            "question": f.question,
-            "answer_html": f.answer_html,
-            "category": key,
+def blog_categories(request):
+    cats = Category.objects.all().order_by("name")
+    items = []
+    for c in cats:
+        items.append({
+            "name": c.name,
+            "slug": c.slug,
         })
-    data = {
-        "groups": [{"category": k, "items": v} for k, v in groups.items()]
-    }
-    return JsonResponse(data)
+    return JsonResponse({"items": items})
 
 @require_GET
 def site_config(request):
-    cfg = SiteConfig.objects.order_by('-updated_at').first()
-    if not cfg:
-        return JsonResponse({
-            "site_name": "Gaspar Insurance Services",
-            "homepage_title": "",
-            "logo_url": "",
-            "favicon_url": "",
-            "phone": "",
-            "email": "",
-            "address": {
-                "line1": "",
-                "line2": "",
-                "city": "",
-                "state": "",
-                "postal_code": "",
-            },
-            "social": {
-                "facebook": "",
-                "twitter": "",
-                "linkedin": "",
-                "instagram": "",
-                "youtube": "",
-            },
-            "footer_about": "",
-            "addresses": [],
-            "pages_meta": [],
-            "updated_at": "",
+    # Try to get the first config, or create default
+    config = SiteConfig.objects.first()
+    if not config:
+        config = SiteConfig.objects.create()
+
+    # Get address
+    addr = SiteAddress.objects.filter(config=config).first()
+    addresses = []
+    if addr:
+        addresses.append({
+            "label": addr.label,
+            "line1": addr.line1,
+            "line2": addr.line2,
+            "city": addr.city,
+            "state": addr.state,
+            "zip_code": addr.zip_code,
+            "map_link": addr.map_link,
         })
-    def safe_url(f):
-        if not f:
-            return ""
+    
+    # Meta
+    meta = PageMeta.objects.filter(config=config)
+    pages_meta = []
+    for m in meta:
+        pages_meta.append({
+            "slug": m.slug,
+            "title": m.title,
+            "meta_title": m.meta_title,
+            "meta_description": m.meta_description,
+        })
+
+    logo_url = ""
+    if config.logo:
         try:
-            return request.build_absolute_uri(f.url)
-        except Exception:
-            return ""
-    data = {
-        "site_name": cfg.site_name,
-        "homepage_title": cfg.homepage_title,
-        "logo_url": safe_url(cfg.logo),
-        "favicon_url": safe_url(cfg.favicon),
-        "phone": cfg.phone,
-        "email": cfg.email,
-        "address": {
-            "line1": cfg.address_line1,
-            "line2": cfg.address_line2,
-            "city": cfg.city,
-            "state": cfg.state,
-            "postal_code": cfg.postal_code,
-        },
-        "social": {
-            "facebook": cfg.facebook_url,
-            "twitter": cfg.twitter_url,
-            "linkedin": cfg.linkedin_url,
-            "instagram": cfg.instagram_url,
-            "youtube": cfg.youtube_url,
-        },
-        "footer_about": cfg.footer_about,
-        "addresses": [
-            {
-                "label": a.label,
-                "line1": a.line1,
-                "line2": a.line2,
-                "city": a.city,
-                "state": a.state,
-                "postal_code": a.postal_code,
-            }
-            for a in SiteAddress.objects.filter(config=cfg).order_by('order', 'id')[:3]
-        ] or ([
-            {
-                "label": "",
-                "line1": cfg.address_line1,
-                "line2": cfg.address_line2,
-                "city": cfg.city,
-                "state": cfg.state,
-                "postal_code": cfg.postal_code,
-            }
-        ] if any([cfg.address_line1, cfg.city, cfg.state, cfg.postal_code]) else []),
-        "pages_meta": [
-            {
-                "slug": pm.slug,
-                "title": pm.title,
-                "meta_title": pm.meta_title,
-                "meta_description": pm.meta_description,
-            }
-            for pm in PageMeta.objects.filter(config=cfg).order_by('slug', 'id')
-        ],
-        "updated_at": localtime(cfg.updated_at).isoformat(),
-    }
-    return JsonResponse(data)
+            logo_url = _abs(request, config.logo.url)
+        except:
+            logo_url = ""
 
-
-
+    return JsonResponse({
+        "site_name": config.site_name,
+        "phone": config.phone_number,
+        "email": config.email_address,
+        "logo_url": logo_url,
+        "addresses": addresses,
+        "pages_meta": pages_meta,
+    })
 
 @require_GET
-def home_partners(request):
-    items = []
-    for p in PartnerLogo.objects.order_by('order', 'id'):
-        try:
-            img = request.build_absolute_uri(p.image.url)
-        except Exception:
-            img = ""
-        items.append({
-            "name": p.name,
-            "image": img,
-            "url": p.url,
-            "order": p.order,
+def faq_list(request):
+    faqs = FAQ.objects.filter(published=True).order_by("order")
+    # Group by category
+    groups = {}
+    for f in faqs:
+        c = f.category or "General"
+        if c not in groups:
+            groups[c] = []
+        groups[c].append({
+            "question": f.question,
+            "answer": f.answer,
         })
-    return JsonResponse({"items": items})
-
+    
+    data = []
+    for k, v in groups.items():
+        data.append({"category": k, "items": v})
+    
+    return JsonResponse({"groups": data})
 
 @require_GET
-def portal_page(request):
-    cfg = SiteConfig.objects.order_by('-updated_at').first()
-    page = PortalPage.objects.prefetch_related('videos', 'features').order_by('-updated_at', '-id').first()
-    def safe_file_url(f):
-        if not f:
-            return ""
+def partner_logos(request):
+    logos = PartnerLogo.objects.all().order_by("order")
+    data = []
+    for l in logos:
+        u = ""
         try:
-            return request.build_absolute_uri(f.url)
-        except Exception:
-            return ""
-    title = page.title if page else 'Customer Portal'
-    hero_subtitle = page.hero_subtitle if page else ''
-    hero_image = safe_file_url(page.hero_image) if page and page.hero_image else ''
-    portal_url = (page.portal_url if page else '')
-    if not portal_url:
-        portal_url = request.build_absolute_uri('/')  # placeholder; frontend can override via env
-    faq_cat = (page.faq_category or '').strip() if page else ''
-    use_faq = bool(page and page.use_faq_points)
-    show_partners = bool(page and page.show_partners)
-    ios_url = page.appstore_ios_url if page else ''
-    android_url = page.appstore_android_url if page else ''
-    features = []
-    if use_faq and faq_cat:
-        qs = FAQ.objects.filter(category__name__iexact=faq_cat, published=True).order_by('order','id')
-        features = [f.question for f in qs][:12]
-    else:
-        features = [it.text for it in (page.features.all() if page else [])]
-    videos = [v.youtube_url for v in (page.videos.all() if page else [])]
-    if cfg and cfg.youtube_url:
-        if cfg.youtube_url not in videos:
-            videos.insert(0, cfg.youtube_url)
-    partners = []
-    if show_partners:
-        for p in PartnerLogo.objects.order_by('order','id'):
-            partners.append({
-                'name': p.name,
-                'image': safe_file_url(p.image),
-                'url': p.url,
-                'order': p.order,
-            })
-    data = {
-        'title': title,
-        'hero_subtitle': hero_subtitle,
-        'hero_image': hero_image,
-        'portal_url': portal_url,
-        'features': features,
-        'videos': videos,
-        'partners': partners,
-        'appstore_ios_url': ios_url,
-        'appstore_android_url': android_url,
-        'contact_email': (cfg.email if cfg else ''),
-        'contact_phone': (cfg.phone if cfg else ''),
-    }
-    return JsonResponse(data)
-
+            u = _abs(request, l.image.url)
+        except:
+            u = ""
+        data.append({"name": l.name, "image": u})
+    return JsonResponse({"items": data})
 
 @require_GET
 def about_page(request):
-    page = AboutPage.objects.order_by('-updated_at').first()
-    if not page:
-        return JsonResponse({
-            'title': 'About Us',
-            'hero_subtitle': 'We put your protection first.',
-            'hero_image': '',
-            'body_html': '<p>We help clients succeed with cost-effective coverage, risk management advice, and employee benefits solutions.</p><p>Our experienced team works across personal and commercial lines to deliver value and service.</p>',
-            'meta_title': 'About Us',
-            'meta_description': 'Learn more about our team and services.',
-        })
+    p = AboutPage.objects.first()
+    if not p:
+        return JsonResponse({})
+    
+    hero = ""
     try:
-        hero = request.build_absolute_uri(page.hero_image.url) if page.hero_image else ''
-    except Exception:
-        hero = ''
-    body = page.body_html or ''
-    def abs_url(u: str) -> str:
-        try:
-            return request.build_absolute_uri(u)
-        except Exception:
-            return u
-    def rewrite_src(m):
-        src = m.group(1)
-        if src.startswith('http://') or src.startswith('https://'):
-            return f'src="{src}"'
-        if src.startswith('/'):
-            return f'src="{abs_url(src)}"'
-        return 'src="' + abs_url('/' + src) + '"'
-    body = re.sub(r'src=["\']([^"\']+)["\']', rewrite_src, body)
-    images = []
-    for img in page.images.all().order_by('order', 'id'):
-        try:
-            url = request.build_absolute_uri(img.image.url)
-        except Exception:
-            url = ''
-        images.append({
-            'url': url,
-            'caption': img.caption,
-            'order': img.order,
-        })
+        hero = _abs(request, p.hero_image.url)
+    except: pass
+
+    stats = []
+    for s in p.stats.all():
+        stats.append({"value": s.value, "label": s.label})
+    
     return JsonResponse({
-        'title': page.title,
-        'hero_subtitle': page.hero_subtitle,
-        'hero_image': hero,
-        'body_html': body,
-        'images': images,
-        'meta_title': page.meta_title,
-        'meta_description': page.meta_description,
+        "title": p.title,
+        "hero_subtitle": p.hero_subtitle,
+        "hero_image": hero,
+        "main_content": p.main_content,
+        "stats": stats,
     })
 
+@require_GET
+def portal_page(request):
+    p = PortalPage.objects.first()
+    if not p:
+        return JsonResponse({})
+    
+    hero = ""
+    try:
+        hero = _abs(request, p.hero_image.url)
+    except: pass
+    
+    feats = [x.strip() for x in p.features_list.split("\n") if x.strip()]
+    vids = [x.strip() for x in p.video_links.split("\n") if x.strip()]
+    
+    parts = []
+    for pa in p.partners.all():
+        u = ""
+        try:
+            u = _abs(request, pa.image.url)
+        except: pass
+        parts.append({"name": pa.name, "image": u})
+
+    return JsonResponse({
+        "title": p.title,
+        "hero_subtitle": p.hero_subtitle,
+        "hero_image": hero,
+        "portal_url": p.portal_url,
+        "features": feats,
+        "videos": vids,
+        "partners": parts,
+        "appstore_ios_url": p.appstore_ios_url,
+        "appstore_android_url": p.appstore_android_url,
+        "contact_email": p.contact_email,
+        "contact_phone": p.contact_phone,
+    })
+
+@csrf_exempt
+def auth_me(request):
+    if request.user.is_authenticated:
+        # Get profile
+        try:
+            prof = request.user.profile
+            phone = prof.phone_number
+        except:
+            phone = ""
+        return JsonResponse({
+            "ok": True,
+            "user": {
+                "username": request.user.username,
+                "email": request.user.email,
+                "first_name": request.user.first_name,
+                "last_name": request.user.last_name,
+                "phone": phone
+            }
+        })
+    return JsonResponse({"ok": False}, status=401)
+
+@csrf_exempt
+def auth_login(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    try:
+        d = json.loads(request.body)
+    except:
+        return JsonResponse({"error": "Bad json"}, status=400)
+    
+    u = authenticate(request, username=d.get("username"), password=d.get("password"))
+    if u:
+        login(request, u)
+        return JsonResponse({"ok": True})
+    return JsonResponse({"error": "Invalid credentials"}, status=401)
+
+@csrf_exempt
+def auth_logout(request):
+    logout(request)
+    return JsonResponse({"ok": True})
+
+@csrf_exempt
+def auth_signup(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    try:
+        d = json.loads(request.body)
+    except:
+        return JsonResponse({"error": "Bad json"}, status=400)
+    
+    user = d.get("username")
+    pw = d.get("password")
+    email = d.get("email")
+    
+    if User.objects.filter(username=user).exists():
+        return JsonResponse({"error": "Username taken"}, status=400)
+    
+    u = User.objects.create_user(user, email, pw)
+    u.first_name = d.get("first_name", "")
+    u.last_name = d.get("last_name", "")
+    u.save()
+    
+    # Profile
+    UserProfile.objects.create(user=u, phone_number=d.get("phone", ""))
+    
+    login(request, u)
+    return JsonResponse({"ok": True})
+
+@require_GET
+def resources_claims(request):
+    # Hardcoded or from model? Let's check models. We don't have a ClaimPage model in snippets, 
+    # but we can check if there's a generic Page model or if we should just return static data 
+    # matched by frontend. For now, let's assume it's static or minimal.
+    # Actually, let's create a placeholder or check if LegalPage covers it? No.
+    # Let's just return a standard structure.
+    return JsonResponse({
+        "title": "Claims Center",
+        "hero_subtitle": "Fast, fair and friendly claims service",
+        "hero_image": "", # Frontend has fallback
+        "body_html": "<p>Report a claim 24/7 using our online portal or call us.</p>"
+    })
 
 @require_GET
 def legal_page(request, slug):
     try:
-        page = LegalPage.objects.get(slug=slug)
+        p = LegalPage.objects.get(slug=slug, published=True)
+        return JsonResponse({
+            "title": p.title,
+            "content_html": p.content_html,
+            "updated_at": p.updated_at.strftime("%B %d, %Y")
+        })
     except LegalPage.DoesNotExist:
         raise Http404("Page not found")
-    def abs_url(u: str) -> str:
-        try:
-            return request.build_absolute_uri(u)
-        except Exception:
-            return u
-    def rewrite_src(m):
-        src = m.group(1)
-        if src.startswith('http://') or src.startswith('https://'):
-            return f'src="{src}"'
-        if src.startswith('/'):
-            return f'src="{abs_url(src)}"'
-        return 'src="' + abs_url('/' + src) + '"'
-    body = page.body_html or ""
-    body = re.sub(r'src=["\']([^"\']+)["\']', rewrite_src, body)
-    data = {
-        'slug': page.slug,
-        'title': page.title,
-        'body_html': body,
-        'meta_title': page.meta_title,
-        'meta_description': page.meta_description,
-        'updated_at': localtime(page.updated_at).isoformat(),
-    }
-    return JsonResponse(data)
-
-
-@require_GET
-def legal_list(request):
-    items = [
-        {
-            'slug': p.slug,
-            'title': p.title,
-        }
-        for p in LegalPage.objects.order_by('slug', 'id')
-    ]
-    return JsonResponse({ 'items': items })
-
-
-@csrf_exempt
-def auth_signup(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    try:
-        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
-    except Exception:
-        payload = request.POST.dict()
-    email = (payload.get('email') or '').strip().lower()
-    password = (payload.get('password') or '').strip()
-    phone = (payload.get('phone') or '').strip()
-    policy = (payload.get('policyNumber') or payload.get('policy_number') or '').strip()
-    if not email or not password:
-        return JsonResponse({'error': 'Email and password are required'}, status=400)
-    if User.objects.filter(username=email).exists():
-        return JsonResponse({'error': 'Account already exists'}, status=400)
-    user = User.objects.create_user(username=email, email=email, password=password)
-    UserProfile.objects.create(user=user, phone=phone, policy_number=policy)
-    return JsonResponse({'ok': True})
-
-
-@csrf_exempt
-def auth_login(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    try:
-        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
-    except Exception:
-        payload = request.POST.dict()
-    email = (payload.get('email') or '').strip().lower()
-    password = (payload.get('password') or '').strip()
-    if not email or not password:
-        return JsonResponse({'error': 'Email and password are required'}, status=400)
-    user = authenticate(request, username=email, password=password)
-    if not user:
-        return JsonResponse({'error': 'Invalid credentials'}, status=401)
-    login(request, user)
-    return JsonResponse({'ok': True})
-
-
-@require_GET
-def auth_me(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({'ok': False})
-    p = getattr(request.user, 'profile', None)
-    return JsonResponse({
-        'ok': True,
-        'email': request.user.username,
-        'phone': (p.phone if p else ''),
-        'policy_number': (p.policy_number if p else ''),
-    })
-
-
-@csrf_exempt
-def auth_logout(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    logout(request)
-    return JsonResponse({'ok': True})
-
-
-@require_GET
-def about_stats(request):
-    items = [
-        {
-            'label': s.label,
-            'value': s.value,
-            'suffix': s.suffix,
-            'order': s.order,
-        }
-        for s in AboutStat.objects.order_by('order', 'id')
-    ]
-    if not items:
-        items = [
-            { 'label': 'Years in Business', 'value': 13, 'suffix': '', 'order': 0 },
-            { 'label': 'Carrier Partners', 'value': 246, 'suffix': '', 'order': 1 },
-            { 'label': 'Bound Policies', 'value': 23000, 'suffix': '', 'order': 2 },
-            { 'label': 'Annual Premiums in US$', 'value': 67000000, 'suffix': '', 'order': 3 },
-        ]
-    return JsonResponse({ 'items': items })

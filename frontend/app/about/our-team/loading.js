@@ -1,9 +1,9 @@
-import Loader from "@/app/components/Loader";
+import Loader from "../../components/Loader";
 
 export default function Loading() {
   return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <Loader />
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <Loader size="lg" color="primary" />
     </div>
   );
 }
