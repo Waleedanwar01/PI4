@@ -109,6 +109,7 @@ if tmpPostgres.scheme:
             'HOST': tmpPostgres.hostname,
             'PORT': 5432,
             'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
+            'CONN_MAX_AGE': 600,  # Persist connections for 10 minutes
         }
     }
 else:

@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 import Link from "next/link";
 import Reveal from "../../components/Reveal";
@@ -7,7 +7,7 @@ import { apiUrl } from "@/app/lib/api";
 
 async function fetchConfig() {
   try {
-    const res = await fetch(apiUrl("/api/site-config"), { cache: "no-store" });
+    const res = await fetch(apiUrl("/api/site-config"), { next: { revalidate: 60 } });
     if (!res.ok) return {};
     return res.json();
   } catch {
@@ -23,7 +23,7 @@ async function fetchBlogs(page, category) {
     url.searchParams.set('page', page);
     url.searchParams.set('page_size', PAGE_SIZE);
     if (category) url.searchParams.set('category', category);
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error('bad');
     const data = await res.json();
     if (!data.items || data.items.length === 0) throw new Error('empty');

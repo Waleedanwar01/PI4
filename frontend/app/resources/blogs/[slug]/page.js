@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 import Reveal from "../../../components/Reveal";
 import { apiUrl } from "../../../lib/api";
@@ -9,7 +9,7 @@ import { FaFacebookF, FaTwitter, FaLinkedinIn } from "react-icons/fa";
 
 async function fetchBlog(slug) {
   try {
-    const res = await fetch(apiUrl(`/api/resources/blogs/${slug}`), { cache: 'no-store' });
+    const res = await fetch(apiUrl(`/api/resources/blogs/${slug}`), { next: { revalidate: 60 } });
     if (!res.ok) throw new Error('bad');
     const data = await res.json();
     return data;
@@ -30,7 +30,7 @@ async function fetchBlog(slug) {
 
 async function fetchPopular() {
   try {
-    const res = await fetch(apiUrl(`/api/resources/blogs?page=1&page_size=5`), { cache: 'no-store' });
+    const res = await fetch(apiUrl(`/api/resources/blogs?page=1&page_size=5`), { next: { revalidate: 300 } });
     if (!res.ok) throw new Error('bad');
     const data = await res.json();
     return data.items;
@@ -76,7 +76,7 @@ function interleaveImages(html, images, slug) {
 
 async function fetchCategories() {
   try {
-    const res = await fetch(apiUrl(`/api/resources/blog-categories`), { cache: 'no-store' });
+    const res = await fetch(apiUrl(`/api/resources/blog-categories`), { next: { revalidate: 3600 } });
     if (!res.ok) throw new Error('bad');
     const data = await res.json();
     return data.items || [];
