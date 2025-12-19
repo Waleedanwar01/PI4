@@ -136,11 +136,7 @@ export default function Page() {
   const faqChosen = faqGroups.find(g => prefer.some(p => (g.category || "").toLowerCase() === p.toLowerCase())) || faqGroups[0] || { items: [] };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <Loader className="min-h-screen bg-gray-50" />;
   }
 
   return (
