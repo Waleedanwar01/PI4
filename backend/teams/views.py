@@ -1,4 +1,5 @@
 from django.http import JsonResponse, Http404
+from django.conf import settings
 from .models import TeamGroup
 
 
