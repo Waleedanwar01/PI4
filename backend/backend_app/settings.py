@@ -109,7 +109,6 @@ if tmpPostgres.scheme:
             'HOST': tmpPostgres.hostname,
             'PORT': 5432,
             'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
-            'CONN_MAX_AGE': 600,  # Persist connections for 10 minutes
         }
     }
 else:
@@ -173,6 +172,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS for Next.js dev
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all for now to fix connection issues
 CORS_ALLOWED_ORIGINS = [o.strip() for o in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',') if o.strip()]
 CORS_ALLOWED_ORIGINS.append('https://pi-4-yawq.vercel.app')
 CORS_ALLOW_CREDENTIALS = True
